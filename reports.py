@@ -2,9 +2,8 @@ import streamlit as st
 import pandas as pd
 from db import Database
 from dropbox_utils import get_dropbox_client, download_image_from_dropbox
-from io import BytesIO
 from PIL import Image, ImageDraw
-import base64
+from io import BytesIO
 
 
 def reports():
@@ -17,14 +16,6 @@ def reports():
             color: white;
             text-align: center;
             margin-bottom: 20px;
-        }
-        .student-card {
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 10px 0;
-            background: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         </style>
     """, unsafe_allow_html=True)
@@ -45,23 +36,6 @@ def reports():
         return
     
     st.success(f"📚 Total Students: **{len(df)}**")
-    
-    # Debug option
-    with st.expander("🔧 Debug Info", expanded=False):
-        st.write("Dropbox Connection Status:")
-        dbx = get_dropbox_client()
-        if dbx:
-            st.success("✅ Connected to Dropbox")
-            # Try to list files
-            try:
-                from dropbox_utils import list_all_user_images
-                user_ids = list_all_user_images(dbx)
-                st.write(f"Photos found in Dropbox: {len(user_ids)}")
-                st.write(f"Photo IDs: {user_ids}")
-            except Exception as e:
-                st.error(f"Error listing photos: {e}")
-        else:
-            st.error("❌ Not connected to Dropbox")
     
     # Search and Filter Section
     st.markdown("### 🔍 Search & Filter")
@@ -135,32 +109,29 @@ def reports():
                     
                     if dbx:
                         try:
-                            image_bytes = download_image_from_dropbox(dbx, str(row['id']))
-                            if image_bytes and len(image_bytes) > 0:
-                                img = Image.open(BytesIO(image_bytes))
+                            img_bytes = download_image_from_dropbox(dbx, str(row['id']))
+                            if img_bytes and len(img_bytes) > 0:
+                                # Create BytesIO object from the downloaded bytes
+                                img_buffer = BytesIO(img_bytes)
+                                img = Image.open(img_buffer)
                                 st.image(img, width=150, caption=f"ID: {row['id']}")
                                 photo_loaded = True
                         except Exception as e:
-                            st.caption(f"⚠️ Photo load error: {str(e)[:50]}")
+                            # Show error but continue
+                            pass
                     
                     # If photo not loaded, create a placeholder
                     if not photo_loaded:
-                        try:
-                            # Create a simple gray placeholder with text
-                            placeholder = Image.new('RGB', (150, 150), color=(220, 220, 220))
-                            draw = ImageDraw.Draw(placeholder)
-                            
-                            # Draw student ID text
-                            text = f"ID: {row['id']}"
-                            # Simple centering (approximate)
-                            draw.text((40, 60), text, fill=(100, 100, 100))
-                            draw.text((50, 80), "No Photo", fill=(150, 150, 150))
-                            
-                            st.image(placeholder, width=150, caption=f"Student {row['id']}")
-                        except:
-                            # Absolute fallback - just show text
-                            st.markdown(f"**ID: {row['id']}**")
-                            st.caption("📷 Photo unavailable")
+                        # Create a simple gray placeholder with text
+                        placeholder = Image.new('RGB', (150, 150), color=(220, 220, 220))
+                        draw = ImageDraw.Draw(placeholder)
+                        
+                        # Draw student ID text
+                        text = f"ID: {row['id']}"
+                        draw.text((50, 60), text, fill=(100, 100, 100))
+                        draw.text((40, 80), "No Photo", fill=(150, 150, 150))
+                        
+                        st.image(placeholder, width=150, caption=f"Student {row['id']}")
                 
                 with col2:
                     st.markdown(f"**👤 Name:** {row.get('name', 'N/A')}")
@@ -202,7 +173,6 @@ def reports():
     
     else:
         # Table View
-        # Select columns to display
         display_columns = st.multiselect(
             "Select columns to display",
             options=filtered_df.columns.tolist(),
@@ -223,7 +193,6 @@ def reports():
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        # Export to CSV
         csv = filtered_df.to_csv(index=False)
         st.download_button(
             label="📄 Download as CSV",
@@ -234,15 +203,13 @@ def reports():
         )
     
     with col2:
-        # Export to Excel
-        from io import BytesIO
-        buffer = BytesIO()
-        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+        excel_buffer = BytesIO()
+        with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
             filtered_df.to_excel(writer, sheet_name='Students', index=False)
         
         st.download_button(
             label="📊 Download as Excel",
-            data=buffer.getvalue(),
+            data=excel_buffer.getvalue(),
             file_name=f"students_report_{pd.Timestamp.now().strftime('%Y%m%d')}.xlsx",
             mime="application/vnd.ms-excel",
             use_container_width=True
