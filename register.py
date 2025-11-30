@@ -152,7 +152,7 @@ def register():
             with col2:
                 admission_date = st.date_input(
                     "Date of Admission",
-                    min_value=datetime.datetime(2020, 1, 1),
+                    min_value=datetime.datetime(2000, 1, 1),
                     max_value=datetime.datetime.today(),
                     value=datetime.datetime.today()
                 )
