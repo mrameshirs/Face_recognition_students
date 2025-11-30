@@ -1,7 +1,9 @@
 import streamlit as st
 import image
 from db import Database
-from dropbox_utils import log_activity, get_dropbox_client
+from dropbox_utils import log_activity, get_dropbox_client, download_image_from_dropbox
+from PIL import Image
+from io import BytesIO
 
 
 def login():
@@ -49,6 +51,27 @@ def login():
                     
                     st.success(f"✅ Welcome back, {student_name}!")
                     st.balloons()
+                    
+                    # Display student photo at the top
+                    st.markdown("### 📸 Student Photo")
+                    photo_col1, photo_col2, photo_col3 = st.columns([1, 2, 1])
+                    
+                    with photo_col2:
+                        if dbx:
+                            try:
+                                img_bytes = download_image_from_dropbox(dbx, str(user_id))
+                                if img_bytes and len(img_bytes) > 0:
+                                    img_buffer = BytesIO(img_bytes)
+                                    img = Image.open(img_buffer)
+                                    st.image(img, caption=f"{student_name} - ID: {user_id}", use_column_width=True)
+                                else:
+                                    st.info("📷 Photo not available in database")
+                            except Exception as e:
+                                st.info("📷 Photo not available")
+                        else:
+                            st.info("📷 Photo not available")
+                    
+                    st.markdown("---")
                     
                     # Display user information in a nice card
                     st.markdown("### 👤 Student Information")
