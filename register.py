@@ -46,7 +46,6 @@ def register():
         picture = st.file_uploader("Upload photo", type=["jpg", "jpeg", "png"], key="regUpload")
 
     if picture:
-
         # Display uploaded photo
         col1, col2 = st.columns([1, 2])
         with col1:
@@ -170,132 +169,94 @@ def register():
                 height=80
             )
             
-            # Submit Button
+            # Submit Button (INSIDE THE FORM)
             st.markdown("---")
             col1, col2, col3 = st.columns([1, 1, 1])
             with col2:
                 submit = st.form_submit_button("✅ Register Student", use_container_width=True)
-
-        # Validate that the image contains a face using DeepFace
-        try:
-            if hasattr(picture, 'getvalue'):
-                image_bytes = picture.getvalue()
-            else:
-                image_bytes = picture.read()
             
-            # Convert to numpy array for DeepFace
-            img = Image.open(BytesIO(image_bytes))
-            img_array = np.array(img)
-            
-            # Try to extract faces using DeepFace
-            try:
-                faces = DeepFace.extract_faces(img_path=img_array, enforce_detection=False)
+            # Form Validation and Submission (STILL INSIDE THE FORM)
+            if submit:
+                # Validate required fields
+                errors = []
                 
-                if len(faces) == 0:
-                    st.error("⚠️ No face detected in the image. Please upload a clear photo showing your face.")
-                    return
-                elif len(faces) > 1:
-                    st.warning("⚠️ Multiple faces detected. Please upload a photo with only one person.")
-                    # Continue anyway, we'll use the first face
-            except Exception as e:
-                # If face detection fails, show warning but allow to continue
-                st.warning(f"⚠️ Face validation uncertain. Proceeding anyway...")
+                if not name or len(name.strip()) < 2:
+                    errors.append("Please enter a valid name")
+                if gender == "Select":
+                    errors.append("Please select gender")
+                if class_std == "Select":
+                    errors.append("Please select class")
+                if not address or len(address.strip()) < 5:
+                    errors.append("Please enter a valid address")
+                if not area:
+                    errors.append("Please enter area/locality")
+                if not city:
+                    errors.append("Please enter city")
+                if not parent_name or len(parent_name.strip()) < 2:
+                    errors.append("Please enter parent/guardian name")
+                if parent_relation == "Select":
+                    errors.append("Please select parent relation")
+                if not parent_contact or len(parent_contact) < 10:
+                    errors.append("Please enter a valid contact number")
                 
-        except Exception as e:
-            st.error(f"Error validating image: {e}")
-            return
-        
-        form = st.form("Register")
-        name = form.text_input("Student name")
-        min_date = datetime.datetime(1900, 1, 1)
-        max_date = datetime.datetime.today()
-        dob = form.date_input("Date of Birth", min_value=min_date, max_value=max_date)
-        city = form.text_input("Class")
-        submit = form.form_submit_button("submit")
-
-        
-        # Form Validation and Submission
-        if submit:
-            # Validate required fields
-            errors = []
-            
-            if not name or len(name.strip()) < 2:
-                errors.append("Please enter a valid name")
-            if gender == "Select":
-                errors.append("Please select gender")
-            if class_std == "Select":
-                errors.append("Please select class")
-            if not address or len(address.strip()) < 5:
-                errors.append("Please enter a valid address")
-            if not area:
-                errors.append("Please enter area/locality")
-            if not city:
-                errors.append("Please enter city")
-            if not parent_name or len(parent_name.strip()) < 2:
-                errors.append("Please enter parent/guardian name")
-            if parent_relation == "Select":
-                errors.append("Please select parent relation")
-            if not parent_contact or len(parent_contact) < 10:
-                errors.append("Please enter a valid contact number")
-            
-            if errors:
-                for error in errors:
-                    st.error(f"❌ {error}")
-            else:
-                with st.spinner("Registering student..."):
-                    # Create user detail object with all fields
-                    user_data = {
-                        'name': name.strip(),
-                        'dob': str(dob),
-                        'gender': gender,
-                        'class': class_std,
-                        'blood_group': blood_group if blood_group != "Select" else "",
-                        'special_talent': special_talent.strip(),
-                        'address': address.strip(),
-                        'area': area.strip(),
-                        'city': city.strip(),
-                        'pincode': pincode.strip(),
-                        'parent_name': parent_name.strip(),
-                        'parent_relation': parent_relation,
-                        'parent_contact': parent_contact.strip(),
-                        'parent_occupation': parent_occupation.strip(),
-                        'parent_email': parent_email.strip(),
-                        'emergency_contact': emergency_contact.strip(),
-                        'previous_school': previous_school.strip(),
-                        'achievements': achievements.strip(),
-                        'admission_date': str(admission_date),
-                        'medical_conditions': medical_conditions.strip(),
-                        'additional_notes': additional_notes.strip()
-                    }
-                    
-                    # Insert user details
-                    user_id = insert_user_detail(user_data)
-                    
-                    if user_id:
-                        # Save image to Dropbox
-                        if image.save_image_to_dropbox(picture, str(user_id)):
-                            st.success(f"🎉 Student registered successfully! Student ID: {user_id}")
-                            st.balloons()
-                            
-                            # Show summary
-                            with st.expander("📄 Registration Summary", expanded=True):
-                                st.markdown(f"""
-                                **Student ID:** {user_id}  
-                                **Name:** {name}  
-                                **Class:** {class_std}  
-                                **Parent/Guardian:** {parent_name} ({parent_relation})  
-                                **Contact:** {parent_contact}  
-                                **Admission Date:** {admission_date}
-                                """)
-                            
-                            # Log activity
-                            dbx = get_dropbox_client()
-                            if dbx:
-                                log_activity(dbx, name, "Student Registration")
+                if errors:
+                    for error in errors:
+                        st.error(f"❌ {error}")
+                else:
+                    with st.spinner("Registering student..."):
+                        # Create user detail object with all fields
+                        user_data = {
+                            'name': name.strip(),
+                            'dob': str(dob),
+                            'gender': gender,
+                            'class': class_std,
+                            'blood_group': blood_group if blood_group != "Select" else "",
+                            'special_talent': special_talent.strip(),
+                            'address': address.strip(),
+                            'area': area.strip(),
+                            'city': city.strip(),
+                            'pincode': pincode.strip(),
+                            'parent_name': parent_name.strip(),
+                            'parent_relation': parent_relation,
+                            'parent_contact': parent_contact.strip(),
+                            'parent_occupation': parent_occupation.strip(),
+                            'parent_email': parent_email.strip(),
+                            'emergency_contact': emergency_contact.strip(),
+                            'previous_school': previous_school.strip(),
+                            'achievements': achievements.strip(),
+                            'admission_date': str(admission_date),
+                            'medical_conditions': medical_conditions.strip(),
+                            'additional_notes': additional_notes.strip()
+                        }
+                        
+                        # Insert user details
+                        user_id = insert_user_detail(user_data)
+                        
+                        if user_id:
+                            # Save image to Dropbox
+                            if image.save_image_to_dropbox(picture, str(user_id)):
+                                st.success(f"🎉 Student registered successfully! Student ID: {user_id}")
+                                st.balloons()
+                                
+                                # Show summary
+                                with st.expander("📄 Registration Summary", expanded=True):
+                                    st.markdown(f"""
+                                    **Student ID:** {user_id}  
+                                    **Name:** {name}  
+                                    **Class:** {class_std}  
+                                    **Parent/Guardian:** {parent_name} ({parent_relation})  
+                                    **Contact:** {parent_contact}  
+                                    **Admission Date:** {admission_date}
+                                    """)
+                                
+                                # Log activity
+                                dbx = get_dropbox_client()
+                                if dbx:
+                                    log_activity(dbx, name, "Student Registration")
+                            else:
+                                st.error("❌ Failed to save photo. Please try again.")
                         else:
-                            st.error("❌ Failed to save photo. Please try again.")
-                    else:
-                        st.error("❌ Registration failed. Please try again.")
+                            st.error("❌ Registration failed. Please try again.")
 
 
 def insert_user_detail(user_data):
@@ -307,3 +268,45 @@ def insert_user_detail(user_data):
     except Exception as e:
         st.error(f"Error inserting user detail: {e}")
         return None
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
