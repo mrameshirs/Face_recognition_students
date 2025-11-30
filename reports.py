@@ -3,7 +3,7 @@ import pandas as pd
 from db import Database
 from dropbox_utils import get_dropbox_client, download_image_from_dropbox
 from io import BytesIO
-from PIL import Image
+from PIL import Image, ImageDraw
 import base64
 
 
@@ -45,6 +45,23 @@ def reports():
         return
     
     st.success(f"📚 Total Students: **{len(df)}**")
+    
+    # Debug option
+    with st.expander("🔧 Debug Info", expanded=False):
+        st.write("Dropbox Connection Status:")
+        dbx = get_dropbox_client()
+        if dbx:
+            st.success("✅ Connected to Dropbox")
+            # Try to list files
+            try:
+                from dropbox_utils import list_all_user_images
+                user_ids = list_all_user_images(dbx)
+                st.write(f"Photos found in Dropbox: {len(user_ids)}")
+                st.write(f"Photo IDs: {user_ids}")
+            except Exception as e:
+                st.error(f"Error listing photos: {e}")
+        else:
+            st.error("❌ Not connected to Dropbox")
     
     # Search and Filter Section
     st.markdown("### 🔍 Search & Filter")
@@ -114,18 +131,36 @@ def reports():
                 
                 with col1:
                     # Try to load and display student photo
-                    try:
-                        if dbx:
+                    photo_loaded = False
+                    
+                    if dbx:
+                        try:
                             image_bytes = download_image_from_dropbox(dbx, str(row['id']))
-                            if image_bytes:
+                            if image_bytes and len(image_bytes) > 0:
                                 img = Image.open(BytesIO(image_bytes))
                                 st.image(img, width=150, caption=f"ID: {row['id']}")
-                            else:
-                                st.image("https://via.placeholder.com/150?text=No+Photo", width=150)
-                        else:
-                            st.image("https://via.placeholder.com/150?text=No+Photo", width=150)
-                    except:
-                        st.image("https://via.placeholder.com/150?text=No+Photo", width=150)
+                                photo_loaded = True
+                        except Exception as e:
+                            st.caption(f"⚠️ Photo load error: {str(e)[:50]}")
+                    
+                    # If photo not loaded, create a placeholder
+                    if not photo_loaded:
+                        try:
+                            # Create a simple gray placeholder with text
+                            placeholder = Image.new('RGB', (150, 150), color=(220, 220, 220))
+                            draw = ImageDraw.Draw(placeholder)
+                            
+                            # Draw student ID text
+                            text = f"ID: {row['id']}"
+                            # Simple centering (approximate)
+                            draw.text((40, 60), text, fill=(100, 100, 100))
+                            draw.text((50, 80), "No Photo", fill=(150, 150, 150))
+                            
+                            st.image(placeholder, width=150, caption=f"Student {row['id']}")
+                        except:
+                            # Absolute fallback - just show text
+                            st.markdown(f"**ID: {row['id']}**")
+                            st.caption("📷 Photo unavailable")
                 
                 with col2:
                     st.markdown(f"**👤 Name:** {row.get('name', 'N/A')}")
@@ -238,3 +273,45 @@ def reports():
         if 'class' in filtered_df.columns:
             classes_count = filtered_df['class'].nunique()
             st.metric("Classes", classes_count)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
