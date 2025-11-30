@@ -2,8 +2,8 @@ import streamlit as st
 
 # Import all modules
 import clear
-import home_new as home
-import register_new as register
+import home as home
+import register as register
 import login
 import reports
 import graphs

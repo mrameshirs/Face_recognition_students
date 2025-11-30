@@ -46,6 +46,7 @@ def register():
         picture = st.file_uploader("Upload photo", type=["jpg", "jpeg", "png"], key="regUpload")
 
     if picture:
+<<<<<<< HEAD
         # Display uploaded photo
         col1, col2 = st.columns([1, 2])
         with col1:
@@ -174,6 +175,44 @@ def register():
             col1, col2, col3 = st.columns([1, 1, 1])
             with col2:
                 submit = st.form_submit_button("✅ Register Student", use_container_width=True)
+=======
+        # Validate that the image contains a face using DeepFace
+        try:
+            if hasattr(picture, 'getvalue'):
+                image_bytes = picture.getvalue()
+            else:
+                image_bytes = picture.read()
+            
+            # Convert to numpy array for DeepFace
+            img = Image.open(BytesIO(image_bytes))
+            img_array = np.array(img)
+            
+            # Try to extract faces using DeepFace
+            try:
+                faces = DeepFace.extract_faces(img_path=img_array, enforce_detection=False)
+                
+                if len(faces) == 0:
+                    st.error("⚠️ No face detected in the image. Please upload a clear photo showing your face.")
+                    return
+                elif len(faces) > 1:
+                    st.warning("⚠️ Multiple faces detected. Please upload a photo with only one person.")
+                    # Continue anyway, we'll use the first face
+            except Exception as e:
+                # If face detection fails, show warning but allow to continue
+                st.warning(f"⚠️ Face validation uncertain. Proceeding anyway...")
+                
+        except Exception as e:
+            st.error(f"Error validating image: {e}")
+            return
+        
+        form = st.form("Register")
+        name = form.text_input("Student name")
+        min_date = datetime.datetime(1900, 1, 1)
+        max_date = datetime.datetime.today()
+        dob = form.date_input("Date of Birth", min_value=min_date, max_value=max_date)
+        city = form.text_input("Class")
+        submit = form.form_submit_button("submit")
+>>>>>>> b3979ae0ae713a63f890ee71494a09e7efcf8416
         
         # Form Validation and Submission
         if submit:
