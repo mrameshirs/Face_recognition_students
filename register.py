@@ -2,7 +2,8 @@ import streamlit as st
 from deepface import DeepFace  # ✅ ADD THIS
 import numpy as np
 from PIL import Image
-from io import BytesIOfrom UserDetail import UserDetail
+from io import BytesIO
+from UserDetail import UserDetail
 from db import Database
 import datetime
 import image
