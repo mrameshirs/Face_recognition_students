@@ -46,7 +46,7 @@ def register():
         picture = st.file_uploader("Upload photo", type=["jpg", "jpeg", "png"], key="regUpload")
 
     if picture:
-<<<<<<< HEAD
+
         # Display uploaded photo
         col1, col2 = st.columns([1, 2])
         with col1:
