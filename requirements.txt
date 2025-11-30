@@ -10,3 +10,6 @@ tensorflow==2.15.0
 tf-keras==2.15.0
 deepface==0.0.92
 protobuf==4.23.4
+
+# For graphs and charts
+plotly==5.18.0
