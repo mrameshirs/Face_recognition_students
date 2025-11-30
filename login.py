@@ -52,6 +52,9 @@ def login():
                     st.success(f"✅ Welcome back, {student_name}!")
                     st.balloons()
                     
+                    # Get Dropbox client for photo loading
+                    dbx = get_dropbox_client()
+                    
                     # Display student photo at the top
                     st.markdown("### 📸 Student Photo")
                     photo_col1, photo_col2, photo_col3 = st.columns([1, 2, 1])
@@ -105,7 +108,6 @@ def login():
                             st.markdown(f"- **Emergency:** {user_detail.get('emergency_contact', 'N/A')}")
                     
                     # Log the login activity
-                    dbx = get_dropbox_client()
                     if dbx:
                         log_activity(dbx, student_name, "Student Login")
                     
@@ -124,45 +126,3 @@ def login():
             else:
                 st.error("❌ No matching face found. Please register first or try again.")
                 st.info("💡 Tip: Make sure you're registered and your face is clearly visible")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
