@@ -175,7 +175,7 @@ def register():
             col1, col2, col3 = st.columns([1, 1, 1])
             with col2:
                 submit = st.form_submit_button("✅ Register Student", use_container_width=True)
-=======
+
         # Validate that the image contains a face using DeepFace
         try:
             if hasattr(picture, 'getvalue'):
@@ -212,7 +212,7 @@ def register():
         dob = form.date_input("Date of Birth", min_value=min_date, max_value=max_date)
         city = form.text_input("Class")
         submit = form.form_submit_button("submit")
->>>>>>> b3979ae0ae713a63f890ee71494a09e7efcf8416
+
         
         # Form Validation and Submission
         if submit:
